@@ -1,118 +1,81 @@
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useState, useEffect } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { useState } from 'react';
+import { Alert, Button, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import BarcodeScanner from '../components/BarcodeScanner';
+import { BASE_SCAN_URL } from '../config/config';
 
 export default function Index() {
-  const [permission, requestPermission] = useCameraPermissions();
-  const [cameraVisible, setCameraVisible] = useState(false);
-  const [facing] = useState<'back' | 'front'>('back'); // ✅ use string union type
-  const [scanned, setScanned] = useState(false);
-  const [lastCode, setLastCode] = useState<string | null>(null);
-  const [showAlert, setShowAlert] = useState(false);
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [barcodes, setBarcodes] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (showAlert && lastCode) {
-      Alert.alert(
-        'EAN-13 Barcode Scanned',
-        `Code: ${lastCode}`,
-        [
-          {
-            text: 'OK',
-            onPress: () => setShowAlert(false),
-          },
-        ],
-        { cancelable: false }
-      );
+  const handleScanned = (code: string) => {
+    setScannerVisible(false);
+    setBarcodes(prev => (prev.includes(code) ? prev : [...prev, code]));
+  };
+
+  const deleteBarcode = (code: string) => {
+    setBarcodes(prev => prev.filter(item => item !== code));
+  };
+
+  const openUrlWithBarcodes = async () => {
+    if (barcodes.length === 0) {
+      Alert.alert('No barcodes', 'Please scan at least one barcode before continuing.');
+      return;
     }
-  }, [showAlert, lastCode]);
+    const joined = barcodes.join(',');
+    const url = `${BASE_SCAN_URL}?barcodes=${encodeURIComponent(joined)}`;
+    await WebBrowser.openBrowserAsync(url);
+  };
 
-  function handleBarcodeScanned({ data, type }: { data: string; type: string }) {
-    if (scanned || type !== 'ean13') return;
-    console.log('Scanned EAN-13:', data);
-
-    setScanned(true);
-    setLastCode(data);
-    setShowAlert(true);
-
-    setTimeout(() => setScanned(false), 3000);
-  }
-
-  if (!permission) {
-    return <View style={styles.container} />;
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to show the camera</Text>
-        <Button onPress={requestPermission} title="Grant Permission" />
-      </View>
-    );
-  }
-
-  if (!cameraVisible) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.message}>Tap to start scanning EAN-13 barcodes.</Text>
-        <Button title="Start Scanner" onPress={() => setCameraVisible(true)} />
-        {lastCode && <Text style={styles.result}>Last scanned code: {lastCode}</Text>}
-      </View>
-    );
+  if (scannerVisible) {
+    return <BarcodeScanner onScanned={handleScanned} />;
   }
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={styles.camera}
-        facing={facing} // ✅ this is now just 'back'
-        onBarcodeScanned={handleBarcodeScanned}
-        barcodeScannerSettings={{
-          barcodeTypes: ['ean13'],
-        }}
-      >
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={() => setCameraVisible(false)}>
-            <Text style={styles.text}>Stop Scanner</Text>
-          </TouchableOpacity>
-        </View>
-      </CameraView>
+      <Text style={styles.title}>Scanned Barcodes:</Text>
+      {barcodes.length === 0 ? (
+        <Text style={styles.message}>No barcodes yet. Start scanning!</Text>
+      ) : (
+        <FlatList
+          data={barcodes}
+          keyExtractor={(item) => item}
+          renderItem={({ item }) => (
+            <View style={styles.barcodeItem}>
+              <Text style={styles.barcodeText}>{item}</Text>
+              <TouchableOpacity onPress={() => deleteBarcode(item)} style={styles.deleteButton}>
+                <Text style={styles.deleteText}>🗑️</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      )}
+
+      <View style={styles.buttonGroup}>
+        <Button title="Start Scanner" onPress={() => setScannerVisible(true)} />
+        <View style={{ height: 12 }} />
+        <Button title="Go to xyz.com" onPress={openUrlWithBarcodes} />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 16,
+  container: { flex: 1, padding: 20, paddingTop: 40 },
+  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  message: { fontSize: 16, textAlign: 'center', marginVertical: 20 },
+  barcodeItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#eee',
+    padding: 10,
+    borderRadius: 6,
+    marginBottom: 8,
   },
-  message: {
-    textAlign: 'center',
-    marginBottom: 16,
-    fontSize: 16,
-  },
-  result: {
-    textAlign: 'center',
-    fontSize: 18,
-    marginTop: 16,
-    fontWeight: 'bold',
-  },
-  camera: { flex: 1 },
-  buttonContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingBottom: 32,
-  },
-  button: {
-    alignSelf: 'center',
-    backgroundColor: '#000000aa',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  text: {
-    fontSize: 18,
-    color: 'white',
-    fontWeight: 'bold',
+  barcodeText: { fontSize: 16 },
+  deleteButton: { paddingHorizontal: 8 },
+  deleteText: { fontSize: 16, color: 'red' },
+  buttonGroup: {
+    marginTop: 20,
   },
 });
