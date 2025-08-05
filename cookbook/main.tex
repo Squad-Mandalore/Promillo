@@ -1,0 +1,43 @@
+% arara: mkdir: { target: 'output' }
+% arara: pdflatex: { options: ['-output-directory=output'] }
+% arara: biber: { options: ['--wraplines', '--output-directory=output'] }
+% arara: pdflatex: { options: ['-output-directory=output'] }
+% arara: pdflatex: { options: ['-output-directory=output'] }
+% arara: move: { files: [ 'output/main.pdf' ], target: 'Promillo.pdf' }
+\documentclass[a4paper,12pt]{article}
+\input{misc/setup}
+\input{misc/titlepage}
+
+\begin{document}
+\maketitle
+\setcounter{page}{2}
+\pagestyle{fancy}
+\fancyhf{}
+
+%% Nices Design
+\setlength{\headheight}{18pt}
+\fancyhead[L]{\changefontbig\nouppercase{\textit{\leftmark}}}
+\fancyhead[R]{\changefontbig\thepage}
+
+\cleardoublepage
+\tableofcontents
+
+\cleardoublepage
+\input{sec/01-einleitung}
+
+% \clearpage
+% \input{sec/02-forschungs-stand}
+
+% \clearpage
+% \input{sec/03-methoden}
+
+% \clearpage
+% \input{sec/04-ergebnisse}
+
+% \clearpage
+% \input{sec/05-diskussion}
+
+\cleardoublepage
+\printbibliography[heading=bibintoc, title={Literaturverzeichnis}]
+
+\end{document}

@@ -1,0 +1,38 @@
+\usepackage[T1]{fontenc} %% Umlaute
+\usepackage[ngerman]{babel}
+\usepackage[backend=biber, style=ieee]{biblatex}
+\addbibresource{literatur.bib}
+\usepackage{url}
+\usepackage{float}
+\usepackage{booktabs} % \usepackage{tabularx}
+\usepackage[onehalfspacing]{setspace} %% Zeilenabstände, singlespacing 1-fach, onehalfspacing 1,5-fach, doublespacing 2-fach
+\usepackage[format=plain,labelfont=bf]{caption}
+\usepackage[left=3cm, right=2cm, top=3cm, bottom=3cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{graphicx}
+\usepackage{emptypage}
+\usepackage[table]{xcolor}
+\usepackage{minted}
+\usepackage[autostyle=true]{csquotes} %mit \textquote Anführungszeichen
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\usepackage{fancyhdr} % Kopf/Fußzeile
+\usepackage[parfill]{parskip}
+
+\newcommand{\changefont}{\fontsize{7}{12}\selectfont}
+\newcommand{\changefontbig}{\fontsize{10}{12}\selectfont}
+
+\setcounter{biburllcpenalty}{9000}% Kleinbuchstaben
+\setcounter{biburlucpenalty}{9000}% Großbuchstaben
+\widowpenalty = 4500
+\clubpenalty = 4500% Vermeidung von Absatzende auf nöchster Seite
+
+\renewcommand{\listingscaption}{Quellcode}%
+
+%%Neudefinition Autoref
+\addto\extrasngerman{%
+    \def \listingautorefname{\listingscaption}%
+}%
