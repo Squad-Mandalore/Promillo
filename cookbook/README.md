@@ -20,7 +20,7 @@ Just run `arara main` inside this directory
   5. `cd install-tl-2*`
   4. `cp /path/to/this/repo/texlive.profile ./`
   6. `perl ./install-tl -profile texlive.profile`
-  7. `echo "export PATH=$HOME/texlive/2025/bin/x86_64-linux:\$PATH" >> .bashrc`
+  7. `echo "export PATH=$HOME/texlive/2025/bin/x86_64-linux:\$PATH" >> ~/.bashrc`
 
   - [Official Quickinstall](https://www.tug.org/texlive/quickinstall.html)
   - [Official Guide](https://www.tug.org/texlive/doc/texlive-en/texlive-en.html#x1-140003)
