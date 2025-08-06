@@ -1,0 +1,519 @@
+{
+  "name": "Das_Ding_final_really_v2",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "basicAuth",
+        "formTitle": "Promillo",
+        "formDescription": "Um den besten Cocktail zu generieren brachen wir infos.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Für wie viel Personen",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Preferenzen",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Süß"
+                  },
+                  {
+                    "option": "Sauer"
+                  },
+                  {
+                    "option": "Stark"
+                  },
+                  {
+                    "option": "Fruchtig"
+                  }
+                ]
+              },
+              "multiselect": true
+            },
+            {
+              "fieldLabel": "Bilder",
+              "fieldType": "file",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Generiere beste Cocktails der Welt",
+          "path": "alcohol",
+          "ignoreBots": true
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -480,
+        -208
+      ],
+      "id": "68843fb9-4570-49c0-a5ac-08191584cb7e",
+      "name": "On form submission",
+      "webhookId": "c048e5ae-b459-4547-a146-45394b1e624f",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "LzliUTMkhtnMXfhv",
+          "name": "Alcohol Form Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f7194cd4-12d5-4aa8-a1e2-b1ee8fe923fa",
+              "name": "personen",
+              "value": "={{ \n  (function(numSamples) {\n    if (!numSamples) return 1;   \n    if (numSamples < 0) return 1; \n    return numSamples; \n  }($json['Für wie viel Personen'])) \n}}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "except",
+        "excludeFields": "['Für wie viel Personen'],formQueryParameters",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -352,
+        -208
+      ],
+      "id": "b92b6e7a-5c4f-48d1-9b87-fa477f936e1b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet out = { preferenzen: $('Edit Fields').first().json.Preferenzen, personen: $('Edit Fields').first().json.personen, products: [] }\nfor (const item of $input.all()) {\n  for (const element in item.json) {\n    if (element == \"submittedAt\" || element == \"formMode\") {\n      delete item.json[element]\n      continue\n    }\n    const placeholder = element\n    const product = item.json[element] || placeholder\n    if (!product) {\n      continue\n    }\n    out.products.push(product)\n  }\n}\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        -208
+      ],
+      "id": "1c412387-f226-4859-9a7c-afd8da488564",
+      "name": "Prettify"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Erkenne auf jedem Bild genau eine Flasche (die im Fokus bzw. im Vordergrund steht) und gib folgende Angaben im exakt angegebenen Format aus:\n\n{Genaue Bezeichnung des Getränks,z. B. “Coca-Cola Zero Sugar”,“Gerolsteiner Mineralwasser Medium”,“Volvic Mango”},{Maximalvolumen in ml},{Füllstand in %}",
+        "inputType": "base64",
+        "binaryPropertyName": "={{$binary.keys().join()}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -144,
+        -208
+      ],
+      "id": "e97bc791-5443-4562-93f4-30971dbdfc61",
+      "name": "Pic2Product",
+      "credentials": {
+        "openAiApi": {
+          "id": "YRF9vIeuDSJ7haRm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Erstelle 5 kreative aber auch gängige Cocktail-Vorschläge auf Basis der folgenden Angaben:\n\n**Präferenzen**: {{ $('Edit Fields').item.json.Preferenzen }}\n**Anzahl Personen**: {{ $('Edit Fields').item.json.personen }}\n**Verfügbare Produkte**: {{ $json.products }}\n\nDie Inhalte von Verfügbare Produkte sind {Produkt},{Maximales Volumen in Milliliter},{Aktueller Inhalt in Prozent}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Du bist MixMaster AI, ein hochqualifizierter virtueller Barkeeper und Cocktailexperte. Deine Aufgabe ist es, auf Basis der vom Nutzer angegebenen Präferenzen, der vorhandenen Zutaten und der gewünschten Anzahl an Personen passende Cocktailrezepte vorzuschlagen. Nutze dazu die Ressource „CocktailDB“ – eine Datenbank mit bekannten Cocktailrezepten als Tool. Beachte dabei:\n\n1. **Eingaben**  \n   - Präferenzen (z. B. Geschmack: süß, sauer, herb; Spirituosen-Favoriten; alkoholfrei; etc.)  \n   - Verfügbare Produkte (Liste von Spirituosen, Likören, Sirups, Säften, Bitters, Früchten, etc.)  \n   - Anzahl Personen, für die gemixt werden soll  \n\n2. **Verarbeitung**  \n   - Greife auf CocktailDB zu, um passende Rezepte zu finden.  \n   - Nutze nicht zwingend alle verfügbaren Zutaten – wähle die besten Kombinationen passend zu den Präferenzen.  \n   - Falls ein Rezept eine oder mehrere Zutaten enthält, die der Nutzer nicht vorrätig hat, führe diese als „fehlende Zutaten“ gesondert auf.  \n\n3. **Ausgabe**  \n   Für jedes Rezept erzeuge folgenden strukturierten Output:\n   - **Cocktailname**\n   - **Benötigte Zutaten** mit Menge pro Cocktail\n   - **Zubereitung** (Schütteln, Rühren, Glasart, Garnitur)  \n   - **Fehlende Zutaten** (Liste der nicht verfügbaren Zutaten; falls keine fehlen, „–“)\n\nVerhalte dich stets professionell, freundlich und präzise.",
+          "passthroughBinaryImages": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        544,
+        -208
+      ],
+      "id": "19da39df-10bd-4043-bfbf-e773c360fb58",
+      "name": "AI Agent",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        32
+      ],
+      "id": "1f9df13e-5e8f-43d7-a3b3-80fd2c073045",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YRF9vIeuDSJ7haRm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"Cocktails\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"required\": [\n          \"Name\",\n          \"Zutaten\",\n          \"Beschreibung\",\n          \"fehlende Zutaten\"\n        ],\n        \"properties\": {\n          \"Name\": {\n            \"type\": \"string\"\n          },\n          \"Beschreibung\": {\n            \"type\": \"string\"\n          },\n          \"Zutaten\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"object\",\n              \"required\": [\n                \"Zutat\",\n                \"Menge\"\n              ],\n              \"properties\": {\n                \"Zutat\": {\n                  \"type\": \"string\"\n                },\n                \"Menge\": {\n                  \"type\": \"string\"\n                }\n              }\n            }\n          },\n          \"fehlende Zutaten\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          }\n        }\n      }\n    }\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        32
+      ],
+      "id": "0b69a55a-78b0-4198-976c-a30371544c40",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "collection": "cocktails",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDbTool",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        32
+      ],
+      "id": "c18342b6-4e17-4b2b-9f90-e90d45a66436",
+      "name": "CocktailDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "dEaVCY1hGvjVWMqY",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cocktails = $input.first().json.output.Cocktails.slice(0, 5); // max. 5\nconst htmlEntries = cocktails.map(cocktail => {\n  const zutaten = cocktail.Zutaten.map(z => `${z.Menge} ${z.Zutat}`).join(\", \");\n  const fehlende = cocktail[\"fehlende Zutaten\"].join(\", \");\n\n  return `\n    <div class=\"entry\">\n        <h3>${cocktail.Name}</h3>\n        <p>${cocktail.Beschreibung}</p>\n        <h4>Zutaten:</h4>\n        <p>${zutaten}</p>\n        <h4>Fehlende Zutaten:</h4>\n        <p>${fehlende}</p>\n    </div>\n  `;\n}).join(\"\\n\");\n\nreturn [\n  {\n    json: {\n      html: htmlEntries\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -208
+      ],
+      "id": "b3d714bc-0978-40f2-afef-0445a9f59cb5",
+      "name": "joinDifferentCocktails"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Cocktail Übersicht</title>\n  <style>\n    body {\n      font-family: sans-serif;\n      background-color: #f0f0f0;\n      margin: 0;\n      padding: 2rem;\n    }\n    .entry {\n      background: white;\n      border-radius: 0.5rem;\n      box-shadow: 0 2px 6px rgba(0,0,0,0.1);\n      margin-bottom: 2rem;\n      padding: 1rem;\n      max-width: 500px;\n      margin-left: auto;\n      margin-right: auto;\n    }\n    .entry img {\n      width: 100%;\n      border-radius: 0.5rem;\n      object-fit: cover;\n      height: 200px;\n    }\n    .entry-text {\n      margin-top: 1rem;\n    }\n  </style>\n</head>\n<body>\n\n  {{ $json.html }}\n\n</body>\n</html>\n"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1216,
+        -560
+      ],
+      "id": "5f819733-83ad-4fec-980b-735a552d8049",
+      "name": "GenerateHTML",
+      "alwaysOutputData": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Cocktail Übersicht",
+        "completionMessage": "={{ $json.html }}",
+        "options": {
+          "customCss": ":root {\n\t--font-family: 'Open Sans', sans-serif;\n\t--font-weight-normal: 400;\n\t--font-weight-bold: 600;\n\t--font-size-body: 12px;\n\t--font-size-label: 14px;\n\t--font-size-test-notice: 12px;\n\t--font-size-input: 14px;\n\t--font-size-header: 20px;\n\t--font-size-paragraph: 14px;\n\t--font-size-link: 12px;\n\t--font-size-error: 12px;\n\t--font-size-html-h1: 28px;\n\t--font-size-html-h2: 20px;\n\t--font-size-html-h3: 16px;\n\t--font-size-html-h4: 14px;\n\t--font-size-html-h5: 12px;\n\t--font-size-html-h6: 10px;\n\t--font-size-subheader: 14px;\n\n\t/* Colors */\n\t--color-background: #fbfcfe;\n\t--color-test-notice-text: #e6a23d;\n\t--color-test-notice-bg: #fefaf6;\n\t--color-test-notice-border: #f6dcb7;\n\t--color-card-bg: #ffffff;\n\t--color-card-border: #dbdfe7;\n\t--color-card-shadow: rgba(99, 77, 255, 0.06);\n\t--color-link: #7e8186;\n\t--color-header: #525356;\n\t--color-label: #555555;\n\t--color-input-border: #dbdfe7;\n\t--color-input-text: #71747A;\n\t--color-focus-border: rgb(90, 76, 194);\n\t--color-submit-btn-bg: #ff6d5a;\n\t--color-submit-btn-text: #ffffff;\n\t--color-error: #ea1f30;\n\t--color-required: #ff6d5a;\n\t--color-clear-button-bg: #7e8186;\n\t--color-html-text: #555;\n\t--color-html-link: #ff6d5a;\n\t--color-header-subtext: #7e8186;\n\n\t/* Border Radii */\n\t--border-radius-card: 8px;\n\t--border-radius-input: 6px;\n\t--border-radius-clear-btn: 50%;\n\t--card-border-radius: 8px;\n\n\t/* Spacing */\n\t--padding-container-top: 24px;\n\t--padding-card: 24px;\n\t--padding-test-notice-vertical: 12px;\n\t--padding-test-notice-horizontal: 24px;\n\t--margin-bottom-card: 16px;\n\t--padding-form-input: 12px;\n\t--card-padding: 24px;\n\t--card-margin-bottom: 16px;\n\n\t/* Dimensions */\n\t--container-width: 100%;\n\t--submit-btn-height: 48px;\n\t--checkbox-size: 18px;\n\n\t/* Others */\n\t--box-shadow-card: 0px 4px 16px 0px var(--color-card-shadow);\n\t--opacity-placeholder: 0.5;\n}\nbody {\n  font-family: 'Open Sans', sans-serif;\n  background-color: #f0f0f0;\n  margin: 0;\n  padding: 2rem;\n}\nh1 {\n  margin-bottom: 2rem;\n}\n.header div {\n  background: white;\n  border-radius: 0.5rem;\n  box-shadow: 0 2px 6px rgba(0,0,0,0.1);\n  padding: 1rem;\n  max-width: 500px;\n  margin: 1rem auto 1rem auto;\n}\n\ndiv h4 {\n  margin-top: 1rem;\n}\nimg {\n  width: 100%;\n  border-radius: 0.5rem;\n  object-fit: cover;\n  height: 200px;\n}"
+        }
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        -208
+      ],
+      "id": "c4a81d5a-cc89-4f99-aa75-2e883b71aa5a",
+      "name": "final",
+      "webhookId": "0ae0ec0a-1eb9-43aa-a721-4bb29c4501f4"
+    },
+    {
+      "parameters": {
+        "defineForm": "json",
+        "jsonOutput": "={{JSON.stringify($items().map(item => item.json))}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -208
+      ],
+      "id": "ff7f5738-b4f9-4f02-a44e-9d4a1e85de3e",
+      "name": "Form",
+      "webhookId": "55f26789-c3f6-4839-a712-a0b78c4d9998"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawData = $json[\"content\"];\nconst lines = rawData.split('\\n');\nconst formFields = [];\n\nlines.forEach((line, index) => {\n  const cleanedLine = line.replace(/^\\d+\\.\\s*/, '');\n  const braceMatches = [...cleanedLine.matchAll(/\\{([^}]+)\\}/g)];\n  let rawValues = [];\n\n  if (braceMatches.length > 0) {\n    braceMatches.forEach(m => {\n      rawValues.push(...m[1].split(',').map(v => v.trim()));\n    });\n  } else {\n    rawValues = cleanedLine.split(',').map(v => v.trim());\n  }\n\n  if (rawValues.length < 3) return;\n\n  const [name, max_amount_raw, current_amount_raw] = rawValues;\n  const max_amount = parseInt(max_amount_raw, 10);\n  const current_amount = parseInt(current_amount_raw, 10);\n\n  if (isNaN(max_amount) || isNaN(current_amount)) return;\n\n  formFields.push({\n    fieldLabel: `name: ${name}, max amount: ${max_amount}, current amount: ${current_amount}`,\n    placeholder: 'enter if you want it changed',\n    requiredField: false\n  });\n});\n\nreturn formFields.map(field => ({ json: field }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -208
+      ],
+      "id": "724912ad-869a-41c7-8bc8-d1f32976b646",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "content": "## 1. Ask User for information\n\nThe form node asks users for the number of persons, the preferred taste and the pictures of the ingredients the user already owns.\n\nAfter that the number of persons will be set to 1 if the input was < 1.",
+        "height": 512,
+        "width": 304,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        -528
+      ],
+      "id": "9002fb8e-014b-4106-a3a1-5c46071e20f4",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 2. Extract beverage from images",
+        "height": 512,
+        "width": 192,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -528
+      ],
+      "id": "57215253-d7be-4d9b-887e-68dbf5b0e0dc",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 3. Show another form\n\nIn this form the user can correct extracted information from the images",
+        "height": 512,
+        "width": 416,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -528
+      ],
+      "id": "676622e4-49f5-4c58-8e75-929a848f2f38",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 4. Generate Recipes\n",
+        "height": 752,
+        "width": 304,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -528
+      ],
+      "id": "a92dc1bb-a093-4939-8604-a0db86285dda",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 5. Displays Recipes",
+        "height": 512,
+        "width": 320,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -528
+      ],
+      "id": "6d85c09a-1154-4c1d-aaf7-f82788c97734",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Pic2Product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prettify": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pic2Product": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "joinDifferentCocktails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CocktailDB": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "joinDifferentCocktails": {
+      "main": [
+        [
+          {
+            "node": "final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GenerateHTML": {
+      "main": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form": {
+      "main": [
+        [
+          {
+            "node": "Prettify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "28723a2d-f1ee-4808-b1da-4b5af4764b47",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bf6281216fce935dca74a4363191c8ed296d7fdd05c1bf4a5fc32e564e324294"
+  },
+  "id": "kj3jLZ4K6JXbd3GW",
+  "tags": [
+    {
+      "createdAt": "2025-05-15T08:05:07.105Z",
+      "updatedAt": "2025-05-15T08:05:07.105Z",
+      "id": "xGNtk65Bmi6uSboD",
+      "name": "Production_final"
+    }
+  ]
+}
