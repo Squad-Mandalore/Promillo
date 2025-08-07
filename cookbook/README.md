@@ -2,6 +2,17 @@
 
 ## Idea
 
+1. Einleitung (Ole)
+   - ziele
+   - funktionswise
+   - warum
+2. technische beschreibung (Moritz)
+   - input/output (blackbox)
+   - warum welche komponente notwendig und wofür
+   - beschreiben der funktionen
+3. how to let beetz cook (Ben)
+   - anleitung für abschreiben
+   - bzw selbst aufsetzen
 
 ## Building
 
