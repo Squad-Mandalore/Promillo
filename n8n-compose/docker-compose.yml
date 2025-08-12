@@ -3,7 +3,7 @@ services:
     image: docker.n8n.io/n8nio/n8n:latest
     restart: always
     ports:
-      - "127.0.0.1:5678:5678"
+      - "5678:5678"
     environment:
       - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
       - N8N_PORT=5678
@@ -29,6 +29,13 @@ services:
     volumes:
       - mongodata:/data/db
       - ./mongodb:/docker-entrypoint-initdb.d
+
+  shopping:
+    build: ./shoppingListMock
+    image: shopping-list:latest
+    restart: always
+    ports:
+      - "3069:3069"
 
 volumes:
   n8n_data:

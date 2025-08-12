@@ -23,14 +23,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ensure bucket exists and return its array
 function getBucket(bucketId) {
-  if (!store.has(bucketId)) store.set(bucketId, []);
+  if (!store.has(bucketId)) return [];
   return store.get(bucketId);
 }
 
 // API: Liste holen
 app.get('/api/items/:bucketId', (req, res) => {
   const { bucketId } = req.params;
-  if (!bucketId ) return res.status(400).json({ error: 'text required' });
   res.json({ items: getBucket(bucketId) });
 });
 
@@ -38,20 +37,25 @@ app.get('/api/items/:bucketId', (req, res) => {
 app.post('/api/items/:bucketId', (req, res) => {
   const { bucketId } = req.params;
   const text = (req.body?.text || '').trim();
-  if (!text || !bucketId ) return res.status(400).json({ error: 'text required' });
+  if (!text) return res.status(400).json({ error: 'text required' });
   const item = { id: crypto.randomUUID(), text, createdAt: Date.now() };
   const bucket = getBucket(bucketId);
-  bucket.unshift(item);
+  const next = [item, ...bucket];
+  store.set(bucketId, next)
   res.status(201).json(item);
 });
 
 // API: Eintrag löschen
 app.delete('/api/items/:bucketId/:id', (req, res) => {
   const { bucketId, id } = req.params;
-  if (!bucketId ) return res.status(400).json({ error: 'text required' });
   const bucket = getBucket(bucketId);
   const next = bucket.filter(i => i.id !== id);
-  store.set(bucketId, next)
+  if (next.length === 0) {
+    // letztes Item geloescht -> Bucket entfernen
+    store.delete(bucketId);
+  } else {
+    store.set(bucketId, next);
+  }
   return res.status(204).end();
 });
 

@@ -24,7 +24,7 @@ function init() {
   wireUI();
   // Versuch, vom Backend zu laden – bei Fehler: aus localStorage
   loadItems().then(renderAll).catch(() => {
-    items = loadFromLocal();
+    // items = loadFromLocal();
     renderAll();
   });
 }
@@ -45,7 +45,7 @@ async function onAdd() {
   const tmp = { id: crypto.randomUUID(), text, createdAt: Date.now(), _optimistic: true };
   items.unshift(tmp);
   renderAll();
-  saveToLocal(items);
+  // saveToLocal(items);
 
   try {
     const created = await apiCreate(text);
@@ -60,7 +60,7 @@ async function onAdd() {
     // bleibt lokal erhalten
   } finally {
     renderAll();
-    saveToLocal(items);
+    // saveToLocal(items);
   }
 }
 
@@ -88,7 +88,7 @@ async function onDone(id, node) {
   setTimeout(() => {
     items = items.filter(i => i.id !== id);
     renderAll();
-    saveToLocal(items);
+    // saveToLocal(items);
   }, 150);
 
   // Backend (best effort)
@@ -98,14 +98,14 @@ async function onDone(id, node) {
 }
 
 // ===== Persistence (localStorage) =====
-const LS_KEY = 'shopping-items-v1';
-function loadFromLocal() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY)) ?? []; }
-  catch { return []; }
-}
-function saveToLocal(list) {
-  localStorage.setItem(LS_KEY, JSON.stringify(list));
-}
+// const LS_KEY = 'shopping-items-v1';
+// function loadFromLocal() {
+//   try { return JSON.parse(localStorage.getItem(LS_KEY)) ?? []; }
+//   catch { return []; }
+// }
+// function saveToLocal(list) {
+//   localStorage.setItem(LS_KEY, JSON.stringify(list));
+// }
 
 // ===== API helpers =====
 async function loadItems() {
@@ -113,11 +113,11 @@ async function loadItems() {
   if (!res.ok) throw new Error('No API');
   const data = await res.json();
   items = data.items ?? [];
-  // merge mit localStorage (einfachster wins: server priorisieren)
-  const local = loadFromLocal();
-  const merged = new Map();
-  [...items, ...local].forEach(i => merged.set(i.id, i));
-  items = Array.from(merged.values()).sort((a,b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+  // // merge mit localStorage (einfachster wins: server priorisieren)
+  // const local = loadFromLocal();
+  // const merged = new Map();
+  // [...items, ...local].forEach(i => merged.set(i.id, i));
+  // items = Array.from(merged.values()).sort((a,b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
   return items;
 }
 
