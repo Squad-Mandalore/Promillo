@@ -1,0 +1,21 @@
+name: Zipper
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  zipper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: copy over shoppinglist and zip up n8n-compose
+        run: |
+          cp --recursive shoppingListMock n8n-compose/shoppingListMock
+          zip --recurse-paths n8n-compose.zip n8n-compose
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: abgabe
+          path: |
+            cookbook/Promillo.pdf
+            n8n-compose.zip
