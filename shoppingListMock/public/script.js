@@ -11,12 +11,12 @@ const els = {
 };
 
 let items = []; // {id, text, createdAt}
-let bucketId = null;
+let bucketId = '';
 
 init();
 
 function getBucketId() {
-  return new URL(window.location.href).searchParams.get("shopping");
+  return new URL(window.location.href).searchParams.get("shopping") ?? '';
 }
 
 function init() {
