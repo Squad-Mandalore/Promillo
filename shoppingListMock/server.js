@@ -13,32 +13,46 @@ const PORT = process.env.PORT || 3069;
 app.use(cors());
 app.use(express.json());
 
-// In-Memory Store
-let items = []; // {id, text, createdAt}
+// In-Memory Store: bucketId -> array of items
+// items =  {id, text, createdAt}
+const store = new Map();
+
 
 // Static files (dist/public folder mit index.html, style.css, script.js)
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ensure bucket exists and return its array
+function getBucket(bucketId) {
+  if (!store.has(bucketId)) store.set(bucketId, []);
+  return store.get(bucketId);
+}
+
 // API: Liste holen
-app.get('/api/items', (req, res) => {
-  res.json({ items });
+app.get('/api/items/:bucketId', (req, res) => {
+  const { bucketId } = req.params;
+  if (!bucketId ) return res.status(400).json({ error: 'text required' });
+  res.json({ items: getBucket(bucketId) });
 });
 
 // API: Eintrag hinzufügen
-app.post('/api/items', (req, res) => {
+app.post('/api/items/:bucketId', (req, res) => {
+  const { bucketId } = req.params;
   const text = (req.body?.text || '').trim();
-  if (!text) return res.status(400).json({ error: 'text required' });
+  if (!text || !bucketId ) return res.status(400).json({ error: 'text required' });
   const item = { id: crypto.randomUUID(), text, createdAt: Date.now() };
-  items.unshift(item);
+  const bucket = getBucket(bucketId);
+  bucket.unshift(item);
   res.status(201).json(item);
 });
 
 // API: Eintrag löschen
-app.delete('/api/items/:id', (req, res) => {
-  const { id } = req.params;
-  const before = items.length;
-  items = items.filter(i => i.id !== id);
-  return res.status(before === items.length ? 404 : 204).end();
+app.delete('/api/items/:bucketId/:id', (req, res) => {
+  const { bucketId, id } = req.params;
+  if (!bucketId ) return res.status(400).json({ error: 'text required' });
+  const bucket = getBucket(bucketId);
+  const next = bucket.filter(i => i.id !== id);
+  store.set(bucketId, next)
+  return res.status(204).end();
 });
 
 app.listen(PORT, () => {

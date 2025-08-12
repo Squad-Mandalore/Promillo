@@ -11,10 +11,16 @@ const els = {
 };
 
 let items = []; // {id, text, createdAt}
+let bucketId = null;
 
 init();
 
+function getBucketId() {
+  return new URL(window.location.href).searchParams.get("shopping");
+}
+
 function init() {
+  bucketId = getBucketId();
   wireUI();
   // Versuch, vom Backend zu laden – bei Fehler: aus localStorage
   loadItems().then(renderAll).catch(() => {
@@ -103,7 +109,7 @@ function saveToLocal(list) {
 
 // ===== API helpers =====
 async function loadItems() {
-  const res = await fetch(API_BASE, { headers: { 'Accept': 'application/json' } });
+  const res = await fetch(`${API_BASE}/${bucketId}`, { headers: { 'Accept': 'application/json' } });
   if (!res.ok) throw new Error('No API');
   const data = await res.json();
   items = data.items ?? [];
@@ -116,7 +122,7 @@ async function loadItems() {
 }
 
 async function apiCreate(text) {
-  const res = await fetch(API_BASE, {
+  const res = await fetch(`${API_BASE}/${bucketId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({ text })
@@ -126,6 +132,6 @@ async function apiCreate(text) {
 }
 
 async function apiDelete(id) {
-  const res = await fetch(`${API_BASE}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  const res = await fetch(`${API_BASE}/${bucketId}/${encodeURIComponent(id)}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('DELETE failed');
 }
