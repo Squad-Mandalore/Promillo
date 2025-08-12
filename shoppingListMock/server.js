@@ -1,7 +1,7 @@
 // server.js
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, URLSearchParams } from 'url';
 import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,6 +20,11 @@ const store = new Map();
 
 // Static files (dist/public folder mit index.html, style.css, script.js)
 app.use(express.static(path.join(__dirname, 'public')));
+
+function redirectUnmatched(req, res) {
+  const q = new URLSearchParams(req.query).toString();
+  res.redirect('/' + (q ? `?${q}` : ''));
+}
 
 // ensure bucket exists and return its array
 function getBucket(bucketId) {
@@ -59,6 +64,14 @@ app.delete('/api/items/:bucketId/:id', (req, res) => {
   return res.status(204).end();
 });
 
-app.listen(PORT, () => {
+app.use(redirectUnmatched);
+
+const server = app.listen(PORT, () => {
   console.log(`Einkaufsliste läuft auf http://localhost:${PORT}`);
+});
+
+process.on('SIGTERM', () => {
+  server.close(() => {
+    console.log(`HTTP server gestoppt`);
+  });
 });
