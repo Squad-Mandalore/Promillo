@@ -1,0 +1,122 @@
+\section{Technische Beschreibung}\label{sec:descr} % (fold)
+
+\subsection{Blackbox-Sicht}\label{sec:descr:blackbox}
+[Ich warte auf Ole, damit wir nicht Sachen doppelt schreiben]
+
+\subsection{Komponenten}\label{sec:descr:components}
+
+Der Workflow ist aus mehreren gedanklichen Komponenten zusammengesetzt, welche wiederum aus kleineren Teilen bestehen. \\
+
+\textbf{Nutzerinformationen} \\
+Damit der Workflow laufen und eine Antwort liefern kann, muss der Nutzer relevante Informationen bereitstellen.
+Diese werden über ein Form abgefragt. Die Fragen sind:
+\begin{itemize}
+    \item Wie viele Personen wollten trinken?
+    \item Welche Präferenzen an Geschmack haben die Personen?
+    \item Bilder über zur verfügung stehenden Getränken oder anderen Lebensmitteln.
+\end{itemize}
+
+Sollte eine Zahl < 1 eingegeben werden, wird die Anzahl an Personen automatisch auf 1 gesetzt.
+Anschließend kann der Nutzer auf den Button klicken, damit der Workflow gestartet wird.
+Im Anschluss wird der Nutzer gebeten zu warten, bis die nächste Komponente abgeschlossen ist. \\
+
+\textbf{Bildanalyse} \\
+Die Bilder werden an ein KI-Modell übergeben, welches die Bilder analysiert und versucht die enthaltenen Objekte zu erkennen.
+Wir nutzen dafür das Modell \textbf{GPT-4O-MINI} welches wir mit dem Workflow verbunden haben. \\
+
+Der genutzte Prompt sieht wie folgt aus:
+\begin{verbatim}
+    Erkenne auf jedem Bild genau eine Flasche 
+    (die im Fokus bzw. im Vordergrund steht) 
+    und gib folgende Angaben im exakt angegebenen Format aus:
+
+    {Genaue Bezeichnung des Getränks,z. B. 
+    “Coca-Cola Zero Sugar”,“Gerolsteiner Mineralwasser Medium”,
+    “Volvic Mango”},{Maximalvolumen in ml},{Füllstand in %}
+\end{verbatim}
+
+Die Ausgabe des Modells erfolgt im JSON-Format, für die weitere Nutzung der Daten im Workflow. \\
+
+\textbf{Datenvalidierung} \\
+Zur korrekten weiterverarbeitung der Daten wird der Nutzer gebeten, diese zu validieren bzw. zu korrigieren.
+Die Daten, welche von der vorherigen Komponente vom KI-Modell kommen, werden zunächst per JavaScript aufbereitet.
+
+Zum genaueren Verständnis kann der folgende Code in \autoref{lst:descr:js:code1} betrachtet werden. Es ist zu beachten, dass teilweise n8n Spezifische Syntax verwendet wird.
+
+Anschließend werden dem Nutzer sämtliche Daten im Formular angezeigt, welche er bei bedarf anpassen bzw. überschreiben kann.
+Wenn keine Veränderungen vorgenomen werden, wird der Wert vom KI-Modell übernommen.
+Die Darstellung erfolgt wie folgt:
+\begin{verbatim}
+    {{JSON.stringify($items().map(item => item.json))}}
+\end{verbatim}
+
+Daraufhin werden die Daten wieder per JavaScript verarbeitet, damit sie im nächsten Schritt von einem weiteren KI-Modell genutzt werden können.
+\autoref{lst:descr:js:code2} zeigt den Code, welcher dafür genutzt wird. \\
+
+\textbf{Rezeptvorschlag} \\
+Die validierten Daten, welche aus der vorherigen Komponente stammen, werden nun an ein weiteres KI-Modell gegeben.
+Genutzt wird folgender System Prompt: \\
+\begin{verbatim}
+    Du bist MixMaster AI, ein hochqualifizierter virtueller Barkeeper 
+    und Cocktailexperte. Deine Aufgabe ist es, auf Basis der vom Nutzer 
+    angegebenen Präferenzen, der vorhandenen Zutaten und der 
+    gewünschten Anzahl an Personen passende Cocktailrezepte vorzuschlagen. 
+    Nutze dazu die Ressource „CocktailDB“ – eine Datenbank mit bekannten 
+    Cocktailrezepten als Tool. Beachte dabei:
+
+1. **Eingaben**  
+   - Präferenzen (z. B. Geschmack: süß, sauer, herb; 
+     Spirituosen-Favoriten; alkoholfrei; etc.)  
+   - Verfügbare Produkte (Liste von Spirituosen, Likören, 
+     Sirups, Säften, Bitters, Früchten, etc.)  
+   - Anzahl Personen, für die gemixt werden soll  
+
+2. **Verarbeitung**  
+   - Greife auf CocktailDB zu, um passende Rezepte zu finden.  
+   - Nutze nicht zwingend alle verfügbaren Zutaten – wähle die 
+     besten Kombinationen passend zu den Präferenzen.  
+   - Falls ein Rezept eine oder mehrere Zutaten enthält, 
+     die der Nutzer nicht vorrätig hat, 
+     führe diese als „fehlende Zutaten“ gesondert auf.  
+
+3. **Ausgabe**  
+   Für jedes Rezept erzeuge folgenden strukturierten Output:
+   - **Cocktailname**
+   - **Benötigte Zutaten** mit Menge pro Cocktail
+   - **Zubereitung** (Schütteln, Rühren, Glasart, Garnitur)  
+   - **Fehlende Zutaten** (Liste der nicht verfügbaren Zutaten; 
+     falls keine fehlen, „–“)
+
+Verhalte dich stets professionell, freundlich und präzise.
+\end{verbatim}
+
+und folgender Prompt:
+\begin{verbatim}
+Erstelle 5 kreative aber auch gängige Cocktail-Vorschläge 
+auf Basis der folgenden Angaben:
+
+**Präferenzen**: {{ $('Edit Fields').item.json.Preferenzen }}
+**Anzahl Personen**: {{ $('Edit Fields').item.json.personen }}
+**Verfügbare Produkte**: {{ $json.products }}
+
+Die Inhalte von Verfügbare Produkte sind {Produkt},
+{Maximales Volumen in Milliliter},{Aktueller Inhalt in Prozent}
+\end{verbatim}
+
+Als Modell wird erneut \textbf{GPT-4O-MINI} genutzt.
+Zudem kommt eine verbundene MongoDB-Datenbank zum Einsatz. Darin können Rezepte gespeichert werden, auf welche das KI-Modell zugreifen kann.
+Zudem werden diese Rezepte vom Modell bevorzugt ausgegeben, wenn sie mit den vermittelten Daten eine Schnittmenge bilden.
+Dadurch können Preferenzen des Nutzers besser berücksichtigt werden, als auch die Halluzinationen des Modells reduziert werden.
+
+Die Ausgabe des Modells erfolgt im JSON-Format, in folgendem Schema: \autoref{lst:descr:js:code3}.
+
+\textbf{Ergebnispräsentation} \\
+Die Ergebnisse der vorherigen Komponente werden dem Nutzer präsentiert.
+Dafür werden die Daten erneut in JavaScript aufbereitet, damit sie in HTML Code umgewandelt werden.
+Der \autoref{lst:descr:js:code4} zeigt den Code, welcher dafür genutzt wird.
+
+Anschließend wird der übergebene HTML Code wieder im Formular angezeigt:
+\begin{verbatim}
+    {{ $json.html }}
+\end{verbatim}
+Dazu kommen noch folgende CSS Styles, um die Darstellung zu verbessern: \autoref{lst:descr:js:code5}.
