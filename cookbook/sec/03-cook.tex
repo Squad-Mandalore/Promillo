@@ -1,9 +1,11 @@
 \section{Cook}\label{sec:cook} % (fold)
-
 Für die Reproduktion des Workflows mit identischer Einrichtung werden zwei Programme benötigt: nginx
 als Reverse Proxy sowie Docker zur Ausführung des n8n-Containers, der Mongo-Datenbank und der
 Einkaufslisten-App.
 
+Der \autoref{sub:einrichtung_nginx} kann beim localem Hosten übersprungen werden.
+
+\subsection{Einrichtung nginx}\label{sub:einrichtung_nginx} % (fold)
 Im bereitgestellten ZIP-Archiv befindet sich die Datei \verb|n8n.conf|. In dieser Datei ist in Zeile 4
 und in Zeile 13 der korrekte Domainname einzutragen. In Zeile 10 und in Zeile 11 sind der Pfad zum
 SSL-Zertifikat und der Pfad zum zugehörigen privaten Schlüssel anzupassen. Nach der Anpassung wird
@@ -16,17 +18,21 @@ symbolischer Link auf die Konfigurationsdatei erstellt:
 ln -s /etc/nginx/sites-available/n8n /etc/nginx/sites-enabled/n8n
 \end{verbatim}
 
-Dasselbe vorgehen muss mit der Datei \ver|shopping.conf| wiederholt werden.
+Dasselbe vorgehen muss mit der Datei \verb|shopping.conf| wiederholt werden.
 
 Damit die Änderungen wirksam werden, ist der nginx-Dienst neu zu laden:
 
 \begin{verbatim}
 nginx -s reload
 \end{verbatim}
+% subsection Einrichtung nginx (end)
 
+\subsection{n8n und Mongo}\label{sub:n_n_und_mongo} % (fold)
 Im entpackten ZIP-Archiv befindet sich ebenfalls die Datei \verb|.env.example|. Diese ist in
-\verb|.env| umzubenennen. In der Datei wird der Domainname eingetragen. Der Start von n8n und
-MongoDB erfolgt über den folgenden Befehl:
+\verb|.env| umzubenennen. In der Datei wird der Domainname eingetragen. Zudem sollten auch die
+Variablen \verb|MONGO_ROOT_PASS| und \verb|MONGO_APP_PASS| angepasst werden. Beim localem Hosten
+sollte die Domain zu \verb|localhost:5678| und das Protokoll zu \verb|http| geänder werden. Der
+Start von n8n und MongoDB erfolgt über den folgenden Befehl:
 
 \begin{verbatim}
 docker compose up
@@ -35,7 +41,9 @@ docker compose up
 Standardmäßig wird dabei die aktuelle stabile Version von n8n verwendet. Die gewünschte Version kann
 in der Datei \verb|docker-compose.yml| festgelegt werden. Die zuletzt getestete Version ist
 \verb|1.105.3|.
+% subsection n8n und Mongo (end)
 
+\subsection{Workflow in n8n}\label{sub:workflow_in_n_n} % (fold)
 Beim ersten Aufruf des n8n-Servers wird die Erstellung eines Benutzerkontos abgefragt. Nach
 erfolgreichem Abschluss der Registrierung erfolgt die Weiterleitung zur Übersichtsseite, die
 \autoref{fig:n8n_overview} dargestellt ist.
@@ -89,5 +97,5 @@ werden die diese korriegiert.
 
 Zum Schluss muss der Workflow in der open rechten Ecke gespeichert und aktiviert werden. Der
 Workflow ist damit unter der eigenen Domaine mit dem Pfad \verb|/form/alcohol| erreichbar.
-
+% subsection Workflow in n8n (end)
 % section Cook (end)

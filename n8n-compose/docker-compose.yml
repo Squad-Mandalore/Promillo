@@ -1,25 +1,25 @@
 services:
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
-    restart: always
+    restart: unless-stopped
     ports:
       - "5678:5678"
     environment:
-      - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=https
-      - NODE_ENV=production
-      - WEBHOOK_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
-      - N8N_DIAGNOSTICS_ENABLED=false
+      - TZ=${GENERIC_TIMEZONE}
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
       - N8N_RUNNERS_ENABLED=true
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_HOST=${DOMAIN_NAME}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=${N8N_PROTOCOL}
+      - WEBHOOK_URL=${N8N_PROTOCOL}://${DOMAIN_NAME}/
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./local-files:/files
 
   mongo:
     image: docker.io/mongo:4
-    restart: always
+    restart: unless-stopped
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASS}
@@ -33,7 +33,7 @@ services:
   shopping:
     build: ./shoppingListMock
     image: shopping-list:latest
-    restart: always
+    restart: unless-stopped
     ports:
       - "3069:3069"
 
