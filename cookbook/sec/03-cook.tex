@@ -1,9 +1,10 @@
 \section{Cook}\label{sec:cook} % (fold)
 
 Für die Reproduktion des Workflows mit identischer Einrichtung werden zwei Programme benötigt: nginx
-als Reverse Proxy sowie Docker zur Ausführung des n8n-Containers und der MongoDB-Datenbank.
+als Reverse Proxy sowie Docker zur Ausführung des n8n-Containers, der Mongo-Datenbank und der
+Einkaufslisten-App.
 
-Im bereitgestellten ZIP-Archiv befindet sich die Datei \verb|nginx.conf|. In dieser Datei ist in Zeile 4
+Im bereitgestellten ZIP-Archiv befindet sich die Datei \verb|n8n.conf|. In dieser Datei ist in Zeile 4
 und in Zeile 13 der korrekte Domainname einzutragen. In Zeile 10 und in Zeile 11 sind der Pfad zum
 SSL-Zertifikat und der Pfad zum zugehörigen privaten Schlüssel anzupassen. Nach der Anpassung wird
 die Datei in das Verzeichnis \verb|/etc/nginx/sites-available| kopiert und mit einem aussagekräftigen
@@ -14,6 +15,8 @@ symbolischer Link auf die Konfigurationsdatei erstellt:
 \begin{verbatim}
 ln -s /etc/nginx/sites-available/n8n /etc/nginx/sites-enabled/n8n
 \end{verbatim}
+
+Dasselbe vorgehen muss mit der Datei \ver|shopping.conf| wiederholt werden.
 
 Damit die Änderungen wirksam werden, ist der nginx-Dienst neu zu laden:
 
