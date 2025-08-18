@@ -397,7 +397,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env[\"SHOPPING_URL\"] ?? \"http://localhost:3069\" }}/api/items/{{ $json.uuid }}",
+        "url": "=http://shopping:3069/api/items/{{ $json.uuid }}",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -617,7 +617,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "5a1cac04-1a5d-423f-ab6c-d242e06b59ac",
+  "versionId": "4d660e00-fe0a-4a7c-a733-b60e9f43755f",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "bf6281216fce935dca74a4363191c8ed296d7fdd05c1bf4a5fc32e564e324294"

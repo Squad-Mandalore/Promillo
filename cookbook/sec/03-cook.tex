@@ -28,15 +28,19 @@ nginx -s reload
 % subsection Einrichtung nginx (end)
 
 \subsection{n8n und Mongo}\label{sub:n_n_und_mongo} % (fold)
-Im entpackten ZIP-Archiv befindet sich ebenfalls die Datei \verb|.env.example|. Diese ist in
-\verb|.env| umzubenennen. In der Datei wird der Domainname eingetragen. Zudem sollten auch die
-Variablen \verb|MONGO_ROOT_PASS| und \verb|MONGO_APP_PASS| angepasst werden. Beim localem Hosten
-sollte die Domain zu \verb|localhost:5678| und das Protokoll zu \verb|http| geänder werden. Der
-Start von n8n und MongoDB erfolgt über den folgenden Befehl:
+In der entpackten ZIP-Datei befindet sich die Datei \verb|.env.example|, die in \verb|.env|
+umbenannt werden muss. Die dort gesetzten Werte sind für den Betrieb mit einer eigenen Domain und
+HTTPS vorgesehen. Sollten die Services also auf einem Server unter einer eigenen Domain gehostet
+werden, müssen diese Werte entsprechend auf die eigene Domain angepasst werden.
 
-\begin{verbatim}
-docker compose up
-\end{verbatim}
+Wird das System hingegen lokal betrieben, ist der Domainname auf \verb|localhost:5678| und das
+Protokoll auf \verb|http| zu ändern. Die Variable \verb|SHOPPING_URL| ist auf
+\verb|http://localhost:3069| zu setzen. Unabhängig davon, ob lokal oder mit eigener Domain gehostet
+wird, sollten die Passwörter in den Variablen \verb|MONGO_ROOT_PASS| und \verb|MONGO_APP_PASS| stets
+angepasst werden.
+
+Nach diesen Änderungen können n8n und MongoDB mit dem Befehl \verb|docker compose up -d| gestartet
+werden.
 
 Standardmäßig wird dabei die aktuelle stabile Version von n8n verwendet. Die gewünschte Version kann
 in der Datei \verb|docker-compose.yml| festgelegt werden. Die zuletzt getestete Version ist
