@@ -214,31 +214,16 @@
     },
     {
       "parameters": {
-        "jsCode": "const cocktails = $input.first().json.output.Cocktails.slice(0, 5); // max. 5\nconst htmlEntries = cocktails.map(cocktail => {\n  const zutaten = cocktail.Zutaten.map(z => `${z.Menge} ${z.Zutat}`).join(\", \");\n  const fehlende = cocktail[\"fehlende Zutaten\"].join(\", \");\n\n  return `\n    <div class=\"entry\">\n        <h3>${cocktail.Name}</h3>\n        <p>${cocktail.Beschreibung}</p>\n        <h4>Zutaten:</h4>\n        <p>${zutaten}</p>\n        <h4>Fehlende Zutaten:</h4>\n        <p>${fehlende}</p>\n    </div>\n  `;\n}).join(\"\\n\");\n\nreturn [\n  {\n    json: {\n      html: htmlEntries\n    }\n  }\n];\n"
+        "jsCode": "const BASE = $env[\"SHOPPING_URL\"] ?? \"http://localhost:3069\";\n\nconst cocktails = $input.all().map(all => all.json);\n\nconst htmlEntries = cocktails.map( (cocktail) => {\n  const zutatenArr = cocktail.Zutaten || [];\n  const fehlendeArr = cocktail['fehlende Zutaten'] || [];\n\n  const zutaten = zutatenArr.map(z => `${z.Menge} ${z.Zutat}`).join(', ');\n  const fehlende = fehlendeArr.join(', ');\n  const bucketId = cocktail.uuid;\n\n  let linkBlock = '';\n\n  const link = `${BASE}/?shopping=${bucketId}`;\n    linkBlock = `\n      <p>\n        <a href=\"${link}\" target=\"_blank\" rel=\"noopener\">Zur Einkaufsliste</a><br>\n        <small>Liste-ID: ${bucketId}</small>\n      </p>\n    `;\n  \n  return `\n    <div class=\"entry\">\n      <h3>${cocktail.Name}</h3>\n      <p>${cocktail.Beschreibung}</p>\n      <h4>Zutaten:</h4>\n      <p>${zutaten}</p>\n      <h4>Fehlende Zutaten:</h4>\n      <p>${fehlende || '-'}</p>\n      ${linkBlock}\n    </div>\n  `;\n});\n\nreturn { html: htmlEntries.join('\\n') };\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        880,
+        1600,
         -208
       ],
       "id": "b3d714bc-0978-40f2-afef-0445a9f59cb5",
       "name": "joinDifferentCocktails"
-    },
-    {
-      "parameters": {
-        "html": "<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Cocktail Übersicht</title>\n  <style>\n    body {\n      font-family: sans-serif;\n      background-color: #f0f0f0;\n      margin: 0;\n      padding: 2rem;\n    }\n    .entry {\n      background: white;\n      border-radius: 0.5rem;\n      box-shadow: 0 2px 6px rgba(0,0,0,0.1);\n      margin-bottom: 2rem;\n      padding: 1rem;\n      max-width: 500px;\n      margin-left: auto;\n      margin-right: auto;\n    }\n    .entry img {\n      width: 100%;\n      border-radius: 0.5rem;\n      object-fit: cover;\n      height: 200px;\n    }\n    .entry-text {\n      margin-top: 1rem;\n    }\n  </style>\n</head>\n<body>\n\n  {{ $json.html }}\n\n</body>\n</html>\n"
-      },
-      "type": "n8n-nodes-base.html",
-      "typeVersion": 1.2,
-      "position": [
-        1216,
-        -560
-      ],
-      "id": "5f819733-83ad-4fec-980b-735a552d8049",
-      "name": "GenerateHTML",
-      "alwaysOutputData": false,
-      "retryOnFail": false
     },
     {
       "parameters": {
@@ -252,7 +237,7 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 1,
       "position": [
-        1024,
+        1760,
         -208
       ],
       "id": "c4a81d5a-cc89-4f99-aa75-2e883b71aa5a",
@@ -354,7 +339,7 @@
     },
     {
       "parameters": {
-        "content": "## 5. Displays Recipes",
+        "content": "## 6. Displays Recipes",
         "height": 512,
         "width": 320,
         "color": 7
@@ -362,11 +347,92 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        848,
+        1568,
         -528
       ],
       "id": "6d85c09a-1154-4c1d-aaf7-f82788c97734",
       "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        -208
+      ],
+      "id": "d19899da-8a48-43ef-aa82-adb3a39cf78f",
+      "name": "Crypto"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.Cocktails",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -208
+      ],
+      "id": "ee43eb3d-868e-496b-bf94-925b4775f485",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        992,
+        -208
+      ],
+      "id": "ddc7367a-b0df-4591-8409-905f9892c05f",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env[\"SHOPPING_URL\"] ?? \"http://localhost:3069\" }}/api/items/{{ $json.uuid }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json['[\"fehlende Zutaten\"]'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1424,
+        -352
+      ],
+      "id": "e3aa1b92-7acd-47e7-9eaa-f1885edbcfc8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "[\"fehlende Zutaten\"]",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "uuid",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        -352
+      ],
+      "id": "dcbda662-e4e1-4f9a-8e02-728ff7378c39",
+      "name": "Split Out1"
     }
   ],
   "pinData": {},
@@ -419,7 +485,7 @@
       "main": [
         [
           {
-            "node": "joinDifferentCocktails",
+            "node": "Split Out",
             "type": "main",
             "index": 0
           }
@@ -470,11 +536,6 @@
         ]
       ]
     },
-    "GenerateHTML": {
-      "main": [
-        []
-      ]
-    },
     "Code": {
       "main": [
         [
@@ -496,13 +557,67 @@
           }
         ]
       ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "joinDifferentCocktails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "28723a2d-f1ee-4808-b1da-4b5af4764b47",
+  "versionId": "5a1cac04-1a5d-423f-ab6c-d242e06b59ac",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "bf6281216fce935dca74a4363191c8ed296d7fdd05c1bf4a5fc32e564e324294"
