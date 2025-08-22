@@ -1,5 +1,5 @@
 \begin{listing}
-\begin{minted}{js}
+\begin{minted}[xleftmargin=20pt,linenos,breaklines]{js}
 const rawData = $json["content"];
 const lines = rawData.split('\n');
 const formFields = [];
@@ -39,9 +39,9 @@ return formFields.map(field => ({ json: field }));
 \end{listing}
 
 \begin{listing}
-\begin{minted}{js}
+\begin{minted}[xleftmargin=20pt,linenos,breaklines]{js}
 // Loop over input items and add a new field called 'myNewField' to the JSON of each one
-let out = { preferenzen: $('Edit Fields').first().json.Preferenzen, personen: $('Edit Fields').first().json.personen, products: [] }
+let out = { preferenzen: $('Edit Fields').first().json.preferenzen, personen: $('Edit Fields').first().json.personen, products: [] }
 for (const item of $input.all()) {
   for (const element in item.json) {
     if (element == "submittedAt" || element == "formMode") {
@@ -58,12 +58,12 @@ for (const item of $input.all()) {
 }
 return out;
 \end{minted}
-\caption{TODO}
+\caption{JavaScript Code zur Nachbereitung der Daten nach der Validierung}
 \label{lst:descr:js:code2}
 \end{listing}
 
 \begin{listing}
-\begin{minted}{js}
+\begin{minted}[xleftmargin=20pt,linenos,breaklines]{json}
 {
   "type": "object",
   "properties": {
@@ -114,43 +114,55 @@ return out;
   }
 }
 \end{minted}
-\caption{TODO}
+\caption{KI-Modell Antwort-Format der Rezeptvorschläge}
 \label{lst:descr:js:code3}
 \end{listing}
 
 \begin{listing}
-\begin{minted}{js}
-const cocktails = $input.first().json.output.Cocktails.slice(0, 5); // max. 5
-const htmlEntries = cocktails.map(cocktail => {
-  const zutaten = cocktail.Zutaten.map(z => `${z.Menge} ${z.Zutat}`).join(", ");
-  const fehlende = cocktail["fehlende Zutaten"].join(", ");
+\begin{minted}[xleftmargin=20pt,linenos,breaklines]{js}
+const BASE = $env["SHOPPING_URL"] ?? "http://localhost:3069";
+
+const cocktails = $input.all().map(all => all.json);
+
+const htmlEntries = cocktails.map( (cocktail) => {
+  const zutatenArr = cocktail.Zutaten || [];
+  const fehlendeArr = cocktail['fehlende Zutaten'] || [];
+
+  const zutaten = zutatenArr.map(z => `${z.Menge} ${z.Zutat}`).join(', ');
+  const fehlende = fehlendeArr.join(', ');
+  const bucketId = cocktail.uuid;
+
+  let linkBlock = '';
+
+  const link = `${BASE}/?shopping=${bucketId}`;
+    linkBlock = `
+      <p>
+        <a href="${link}" target="_blank" rel="noopener">Zur Einkaufsliste</a><br>
+        <small>Liste-ID: ${bucketId}</small>
+      </p>
+    `;
 
   return `
     <div class="entry">
-        <h3>${cocktail.Name}</h3>
-        <p>${cocktail.Beschreibung}</p>
-        <h4>Zutaten:</h4>
-        <p>${zutaten}</p>
-        <h4>Fehlende Zutaten:</h4>
-        <p>${fehlende}</p>
+      <h3>${cocktail.Name}</h3>
+      <p>${cocktail.Beschreibung}</p>
+      <h4>Zutaten:</h4>
+      <p>${zutaten}</p>
+      <h4>Fehlende Zutaten:</h4>
+      <p>${fehlende || '-'}</p>
+      ${linkBlock}
     </div>
   `;
-}).join("\n");
+});
 
-return [
-  {
-    json: {
-      html: htmlEntries
-    }
-  }
-];
+return { html: htmlEntries.join('\n') };
 \end{minted}
-\caption{TODO}
+\caption{JavaScript Code zur Vorbereitung der Ergebnisdarstellung}
 \label{lst:descr:js:code4}
 \end{listing}
 
 \begin{listing}
-\begin{minted}{css}
+\begin{minted}[xleftmargin=20pt,linenos,breaklines]{css}
 body {
   font-family: 'Open Sans', sans-serif;
   background-color: #f0f0f0;
@@ -173,6 +185,6 @@ div h4 {
   margin-top: 1rem;
 }
 \end{minted}
-\caption{TODO}
+\caption{CSS Code um dem Auge beim Erblicken des Ergebnisses zu schmeicheln}
 \label{lst:descr:js:code5}
 \end{listing}

@@ -3,7 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "authentication": "basicAuth",
         "formTitle": "Promillo",
         "formDescription": "Um den besten Cocktail zu generieren brachen wir infos.",
         "formFields": {
@@ -14,7 +13,7 @@
               "requiredField": true
             },
             {
-              "fieldLabel": "Preferenzen",
+              "fieldLabel": "Präferenzen",
               "fieldType": "dropdown",
               "fieldOptions": {
                 "values": [
@@ -25,10 +24,16 @@
                     "option": "Sauer"
                   },
                   {
-                    "option": "Stark"
+                    "option": "Kräftig"
                   },
                   {
                     "option": "Fruchtig"
+                  },
+                  {
+                    "option": "Bitter"
+                  },
+                  {
+                    "option": "Würzig"
                   }
                 ]
               },
@@ -52,18 +57,12 @@
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 2.2,
       "position": [
-        -480,
-        -208
+        -432,
+        -256
       ],
       "id": "68843fb9-4570-49c0-a5ac-08191584cb7e",
       "name": "On form submission",
-      "webhookId": "c048e5ae-b459-4547-a146-45394b1e624f",
-      "credentials": {
-        "httpBasicAuth": {
-          "id": "LzliUTMkhtnMXfhv",
-          "name": "Alcohol Form Credential"
-        }
-      }
+      "webhookId": "c048e5ae-b459-4547-a146-45394b1e624f"
     },
     {
       "parameters": {
@@ -74,32 +73,38 @@
               "name": "personen",
               "value": "={{ \n  (function(numSamples) {\n    if (!numSamples) return 1;   \n    if (numSamples < 0) return 1; \n    return numSamples; \n  }($json['Für wie viel Personen'])) \n}}",
               "type": "number"
+            },
+            {
+              "id": "fa13a411-fcb0-4dd9-b39a-47e5c81658f2",
+              "name": "preferenzen",
+              "value": "={{ $json[\"Präferenzen\"] }}",
+              "type": "array"
             }
           ]
         },
         "includeOtherFields": true,
         "include": "except",
-        "excludeFields": "['Für wie viel Personen'],formQueryParameters",
+        "excludeFields": "['Für wie viel Personen'],formQueryParameters,['Präferenzen']",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -352,
-        -208
+        -304,
+        -256
       ],
       "id": "b92b6e7a-5c4f-48d1-9b87-fa477f936e1b",
       "name": "Edit Fields"
     },
     {
       "parameters": {
-        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet out = { preferenzen: $('Edit Fields').first().json.Preferenzen, personen: $('Edit Fields').first().json.personen, products: [] }\nfor (const item of $input.all()) {\n  for (const element in item.json) {\n    if (element == \"submittedAt\" || element == \"formMode\") {\n      delete item.json[element]\n      continue\n    }\n    const placeholder = element\n    const product = item.json[element] || placeholder\n    if (!product) {\n      continue\n    }\n    out.products.push(product)\n  }\n}\nreturn out;"
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet out = { preferenzen: $('Edit Fields').first().json.preferenzen, personen: $('Edit Fields').first().json.personen, products: [] }\nfor (const item of $input.all()) {\n  for (const element in item.json) {\n    if (element == \"submittedAt\" || element == \"formMode\") {\n      delete item.json[element]\n      continue\n    }\n    const placeholder = element\n    const product = item.json[element] || placeholder\n    if (!product) {\n      continue\n    }\n    out.products.push(product)\n  }\n}\nreturn out;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        336,
-        -208
+        560,
+        -256
       ],
       "id": "1c412387-f226-4859-9a7c-afd8da488564",
       "name": "Prettify"
@@ -122,8 +127,8 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        -144,
-        -208
+        -32,
+        -256
       ],
       "id": "e97bc791-5443-4562-93f4-30971dbdfc61",
       "name": "Pic2Product",
@@ -137,18 +142,18 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Erstelle 5 kreative aber auch gängige Cocktail-Vorschläge auf Basis der folgenden Angaben:\n\n**Präferenzen**: {{ $('Edit Fields').item.json.Preferenzen }}\n**Anzahl Personen**: {{ $('Edit Fields').item.json.personen }}\n**Verfügbare Produkte**: {{ $json.products }}\n\nDie Inhalte von Verfügbare Produkte sind {Produkt},{Maximales Volumen in Milliliter},{Aktueller Inhalt in Prozent}",
+        "text": "=Erstelle 5 kreative aber auch gängige Cocktail-Vorschläge auf Basis der folgenden Angaben:\n\n**Präferenzen**: {{ $('Edit Fields').item.json.preferenzen }}\n**Anzahl Personen**: {{ $('Edit Fields').item.json.personen }}\n**Verfügbare Produkte**: {{ $json.products }}\n\nDie Inhalte von Verfügbare Produkte sind {Produkt},{Maximales Volumen in Milliliter},{Aktueller Inhalt in Prozent}",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "Du bist MixMaster AI, ein hochqualifizierter virtueller Barkeeper und Cocktailexperte. Deine Aufgabe ist es, auf Basis der vom Nutzer angegebenen Präferenzen, der vorhandenen Zutaten und der gewünschten Anzahl an Personen passende Cocktailrezepte vorzuschlagen. Nutze dazu die Ressource „CocktailDB“ – eine Datenbank mit bekannten Cocktailrezepten als Tool. Beachte dabei:\n\n1. **Eingaben**  \n   - Präferenzen (z. B. Geschmack: süß, sauer, herb; Spirituosen-Favoriten; alkoholfrei; etc.)  \n   - Verfügbare Produkte (Liste von Spirituosen, Likören, Sirups, Säften, Bitters, Früchten, etc.)  \n   - Anzahl Personen, für die gemixt werden soll  \n\n2. **Verarbeitung**  \n   - Greife auf CocktailDB zu, um passende Rezepte zu finden.  \n   - Nutze nicht zwingend alle verfügbaren Zutaten – wähle die besten Kombinationen passend zu den Präferenzen.  \n   - Falls ein Rezept eine oder mehrere Zutaten enthält, die der Nutzer nicht vorrätig hat, führe diese als „fehlende Zutaten“ gesondert auf.  \n\n3. **Ausgabe**  \n   Für jedes Rezept erzeuge folgenden strukturierten Output:\n   - **Cocktailname**\n   - **Benötigte Zutaten** mit Menge pro Cocktail\n   - **Zubereitung** (Schütteln, Rühren, Glasart, Garnitur)  \n   - **Fehlende Zutaten** (Liste der nicht verfügbaren Zutaten; falls keine fehlen, „–“)\n\nVerhalte dich stets professionell, freundlich und präzise.",
+          "systemMessage": "Du bist MixMaster AI, ein hochqualifizierter virtueller Barkeeper und Cocktailexperte. Deine Aufgabe ist es, auf Basis der vom Nutzer angegebenen Präferenzen, der vorhandenen Zutaten und der gewünschten Anzahl an Personen passende Cocktailrezepte vorzuschlagen. Nutze dazu die Ressource „CocktailDB“ – eine Datenbank mit bekannten Cocktailrezepten als Tool. Beachte dabei:\n\n1. **Eingaben**  \n   - Präferenzen (z. B. Geschmack: süß, sauer, herb etc.)  \n   - Verfügbare Produkte (Liste von Spirituosen, Likören, Sirups, Säften, Bitters, Früchten, etc.)  \n   - Anzahl Personen, für die gemixt werden soll  \n\n2. **Verarbeitung**  \n   - Greife auf CocktailDB zu, um passende Rezepte zu finden.  \n   - Nutze nicht zwingend alle verfügbaren Zutaten – wähle die besten Kombinationen passend zu den Präferenzen.  \n   - Falls ein Rezept eine oder mehrere Zutaten enthält, die der Nutzer nicht vorrätig hat, führe diese als „fehlende Zutaten“ gesondert auf.  \n\nVerhalte dich stets professionell, freundlich und präzise.",
           "passthroughBinaryImages": false
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.9,
       "position": [
-        544,
-        -208
+        928,
+        -256
       ],
       "id": "19da39df-10bd-4043-bfbf-e773c360fb58",
       "name": "AI Agent",
@@ -158,16 +163,17 @@
       "parameters": {
         "model": {
           "__rl": true,
+          "value": "gpt-4o-mini",
           "mode": "list",
-          "value": "gpt-4o-mini"
+          "cachedResultName": "gpt-4o-mini"
         },
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        512,
-        32
+        864,
+        -32
       ],
       "id": "1f9df13e-5e8f-43d7-a3b3-80fd2c073045",
       "name": "OpenAI Chat Model",
@@ -186,8 +192,8 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
       "position": [
-        720,
-        32
+        1120,
+        -32
       ],
       "id": "0b69a55a-78b0-4198-976c-a30371544c40",
       "name": "Structured Output Parser"
@@ -200,8 +206,8 @@
       "type": "n8n-nodes-base.mongoDbTool",
       "typeVersion": 1.2,
       "position": [
-        608,
-        32
+        992,
+        -32
       ],
       "id": "c18342b6-4e17-4b2b-9f90-e90d45a66436",
       "name": "CocktailDB",
@@ -219,8 +225,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1600,
-        -208
+        2048,
+        -160
       ],
       "id": "b3d714bc-0978-40f2-afef-0445a9f59cb5",
       "name": "joinDifferentCocktails"
@@ -237,8 +243,8 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 1,
       "position": [
-        1760,
-        -208
+        2192,
+        -160
       ],
       "id": "c4a81d5a-cc89-4f99-aa75-2e883b71aa5a",
       "name": "final",
@@ -253,8 +259,8 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 1,
       "position": [
-        208,
-        -208
+        416,
+        -256
       ],
       "id": "ff7f5738-b4f9-4f02-a44e-9d4a1e85de3e",
       "name": "Form",
@@ -267,8 +273,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        80,
-        -208
+        272,
+        -256
       ],
       "id": "724912ad-869a-41c7-8bc8-d1f32976b646",
       "name": "Code"
@@ -283,8 +289,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -528,
-        -528
+        -480,
+        -608
       ],
       "id": "9002fb8e-014b-4106-a3a1-5c46071e20f4",
       "name": "Sticky Note"
@@ -299,8 +305,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -208,
-        -528
+        -80,
+        -608
       ],
       "id": "57215253-d7be-4d9b-887e-68dbf5b0e0dc",
       "name": "Sticky Note1"
@@ -315,8 +321,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        32,
-        -528
+        256,
+        -608
       ],
       "id": "676622e4-49f5-4c58-8e75-929a848f2f38",
       "name": "Sticky Note2"
@@ -331,8 +337,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        496,
-        -528
+        880,
+        -640
       ],
       "id": "a92dc1bb-a093-4939-8604-a0db86285dda",
       "name": "Sticky Note3"
@@ -347,8 +353,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1568,
-        -528
+        2000,
+        -512
       ],
       "id": "6d85c09a-1154-4c1d-aaf7-f82788c97734",
       "name": "Sticky Note4"
@@ -361,8 +367,8 @@
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        1136,
-        -208
+        1584,
+        -256
       ],
       "id": "d19899da-8a48-43ef-aa82-adb3a39cf78f",
       "name": "Crypto"
@@ -375,8 +381,8 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        848,
-        -208
+        1248,
+        -256
       ],
       "id": "ee43eb3d-868e-496b-bf94-925b4775f485",
       "name": "Split Out"
@@ -388,8 +394,8 @@
       "type": "n8n-nodes-base.limit",
       "typeVersion": 1,
       "position": [
-        992,
-        -208
+        1408,
+        -256
       ],
       "id": "ddc7367a-b0df-4591-8409-905f9892c05f",
       "name": "Limit"
@@ -412,8 +418,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1424,
-        -352
+        1856,
+        -400
       ],
       "id": "e3aa1b92-7acd-47e7-9eaa-f1885edbcfc8",
       "name": "HTTP Request"
@@ -428,11 +434,27 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        1296,
-        -352
+        1712,
+        -400
       ],
       "id": "dcbda662-e4e1-4f9a-8e02-728ff7378c39",
       "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "content": "## 5. Create Shopping list\n",
+        "height": 752,
+        "width": 688,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1248,
+        -656
+      ],
+      "typeVersion": 1,
+      "id": "2475d4d9-4b75-4957-a226-f72f35296421",
+      "name": "Sticky Note5"
     }
   ],
   "pinData": {},
@@ -615,9 +637,10 @@
   },
   "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "4d660e00-fe0a-4a7c-a733-b60e9f43755f",
+  "versionId": "9fd4be59-bf34-4266-bdaf-4f4d70cbf79f",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "bf6281216fce935dca74a4363191c8ed296d7fdd05c1bf4a5fc32e564e324294"

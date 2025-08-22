@@ -1,21 +1,19 @@
-\section{Cook}\label{sec:cook} % (fold)
+\section{Anleitung zur selbständigen Reproduktion}\label{sec:cook} % (fold)
 Für die Reproduktion des Workflows mit identischer Einrichtung werden zwei Programme benötigt: nginx
 als Reverse Proxy sowie Docker zur Ausführung des n8n-Containers, der Mongo-Datenbank und der
-Einkaufslisten-App.
+Einkaufslisten-Web-App.
 
 Der \autoref{sub:einrichtung_nginx} kann beim localem Hosten übersprungen werden.
 
 \subsection{Einrichtung nginx}\label{sub:einrichtung_nginx} % (fold)
-Im bereitgestellten ZIP-Archiv befindet sich die Datei \verb|n8n.conf|. In dieser Datei ist in Zeile 4
-und in Zeile 13 der korrekte Domainname einzutragen. In Zeile 10 und in Zeile 11 sind der Pfad zum
-SSL-Zertifikat und der Pfad zum zugehörigen privaten Schlüssel anzupassen. Nach der Anpassung wird
-die Datei in das Verzeichnis \verb|/etc/nginx/sites-available| kopiert und mit einem aussagekräftigen
-Namen, beispielsweise n8n, versehen. Anschließend wird im Verzeichnis
-\verb|/etc/nginx/sites-enabled| ein
-symbolischer Link auf die Konfigurationsdatei erstellt:
+Im bereitgestellten ZIP-Archiv befindet sich die Datei \verb|n8n.conf|. In dieser Datei ist in Zeile
+4 und in Zeile 13 der korrekte Domainname einzutragen. In Zeile 10 und in Zeile 11 ist der Pfad zum
+SSL-Zertifikat und zum zugehörigen privaten Schlüssel anzupassen. Nach der Anpassung ist die Datei
+in das Verzeichnis \verb|/etc/nginx/sites-available| zu kopieren. Anschließend ist im Verzeichnis
+\verb|/etc/nginx/sites-enabled| ein symbolischer Link auf die Konfigurationsdatei zu erstellen:
 
 \begin{verbatim}
-ln -s /etc/nginx/sites-available/n8n /etc/nginx/sites-enabled/n8n
+ln -s /etc/nginx/sites-available/n8n.conf /etc/nginx/sites-enabled/n8n.conf
 \end{verbatim}
 
 Dasselbe vorgehen muss mit der Datei \verb|shopping.conf| wiederholt werden.
@@ -39,8 +37,8 @@ Protokoll auf \verb|http| zu ändern. Die Variable \verb|SHOPPING_URL| ist auf
 wird, sollten die Passwörter in den Variablen \verb|MONGO_ROOT_PASS| und \verb|MONGO_APP_PASS| stets
 angepasst werden.
 
-Nach diesen Änderungen können n8n und MongoDB mit dem Befehl \verb|docker compose up -d| gestartet
-werden.
+Nach diesen Änderungen können n8n, MongoDB und die Einkaufslisten-Web-App mit dem Befehl
+\verb|docker compose up -d| gestartet werden.
 
 Standardmäßig wird dabei die aktuelle stabile Version von n8n verwendet. Die gewünschte Version kann
 in der Datei \verb|docker-compose.yml| festgelegt werden. Die zuletzt getestete Version ist
@@ -49,7 +47,7 @@ in der Datei \verb|docker-compose.yml| festgelegt werden. Die zuletzt getestete 
 
 \subsection{Workflow in n8n}\label{sub:workflow_in_n_n} % (fold)
 Beim ersten Aufruf des n8n-Servers wird die Erstellung eines Benutzerkontos abgefragt. Nach
-erfolgreichem Abschluss der Registrierung erfolgt die Weiterleitung zur Übersichtsseite, die
+erfolgreichem Abschluss der Registrierung erfolgt die Weiterleitung zur Übersichtsseite, die in
 \autoref{fig:n8n_overview} dargestellt ist.
 
 \begin{figure}
@@ -60,7 +58,7 @@ erfolgreichem Abschluss der Registrierung erfolgt die Weiterleitung zur Übersic
 \end{figure}
 
 In n8n selber müssen zunächst im \enquote{Credentials} Reiter zwei Zugangsdaten angelegt werden. Für
-die MongoDB muss in den Feldern \enquote{Database}, \enquote{User} und \enquote{Password} die Daten
+die MongoDB müssen in den Feldern \enquote{Database}, \enquote{User} und \enquote{Password} die Daten
 eingetragen werden, die in der \verb|.env| Datei als \verb|MONGO_APP_DB|, \verb|MONGO_APP_USER| und
 \verb|MONGO_APP_PASS| festgelegt wurden.
 
@@ -71,8 +69,8 @@ eingetragen werden, die in der \verb|.env| Datei als \verb|MONGO_APP_DB|, \verb|
     \caption{n8n MongoDB Zugangsdaten}\label{fig:n8n_mongo_creds}
 \end{figure}
 
-Für die KI muss noch ein API Schlüssel von seinem OpenAI Benutzerkonto hinterlegt werden. Dazu wird
-der zweite Zugangsdatum erstellt.
+Für die KI muss noch ein API Schlüssel von einem OpenAI Benutzerkonto hinterlegt werden. Dazu wird
+das zweite Zugangsdatum erstellt.
 
 \begin{figure}
     \begin{center}
@@ -82,7 +80,7 @@ der zweite Zugangsdatum erstellt.
 \end{figure}
 
 Nachdem die beiden Zugangsdaten angelegt wurden, kann ein neuer Workflow erstellt werden. Im
-Bearbeitungsmodus angekommen, befindet sich open rechts im Dreipunktemenü die Auswahl ein
+Bearbeitungsmodus angekommen, befindet sich oben rechts im Dreipunktemenü die Auswahl ein
 vorhandenen Workflow von einer Datei zu importieren. Im ZIP-Archiv ist der Workflow unter dem Namen
 \verb|Promillo.json| zu finden.
 
@@ -94,12 +92,12 @@ vorhandenen Workflow von einer Datei zu importieren. Im ZIP-Archiv ist der Workf
 \end{figure}
 
 Die Nodes, die Zugangsdaten benötigen werden rot makiert, diese müssen mit Doppelklick einmal
-geöffnet und in der obenren linken Ecke geschlossen werden. Die Zugangsdaten verwenden zwar den
-standart Namen, werden von n8n aber mit eindeutigen IDs referenziert. Aufgrund des anlegens der
+geöffnet und in der oberen linken Ecke geschlossen werden. Die Zugangsdaten verwenden zwar den
+standard Namen, werden von n8n aber mit eindeutigen IDs referenziert. Aufgrund des anlegens der
 Zugangsdaten werden im Workflow nicht die richtigen IDs referenziert, durch das Öffnen und Schließen
-werden die diese korriegiert.
+werden diese jedoch korriegiert.
 
-Zum Schluss muss der Workflow in der open rechten Ecke gespeichert und aktiviert werden. Der
+Zum Schluss muss der Workflow in der oberen rechten Ecke gespeichert und aktiviert werden. Der
 Workflow ist damit unter der eigenen Domaine mit dem Pfad \verb|/form/alcohol| erreichbar.
 % subsection Workflow in n8n (end)
 % section Cook (end)
