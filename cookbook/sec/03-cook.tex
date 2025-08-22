@@ -32,10 +32,10 @@ HTTPS vorgesehen. Sollten die Services also auf einem Server unter einer eigenen
 werden, müssen diese Werte entsprechend auf die eigene Domain angepasst werden.
 
 Wird das System hingegen lokal betrieben, ist der Domainname auf \verb|localhost:5678| und das
-Protokoll auf \verb|http| zu ändern. Die Variable \verb|SHOPPING_URL| ist auf
+Protokoll auf \verb|http| zu ändern. Die Variable \verb|SHOPPING_URL| ist auf \\
 \verb|http://localhost:3069| zu setzen. Unabhängig davon, ob lokal oder mit eigener Domain gehostet
-wird, sollten die Passwörter in den Variablen \verb|MONGO_ROOT_PASS| und \verb|MONGO_APP_PASS| stets
-angepasst werden.
+wird, sollten die Passwörter in den Variablen \verb|MONGO_ROOT_PASS| und \\
+\verb|MONGO_APP_PASS| stets angepasst werden.
 
 Nach diesen Änderungen können n8n, MongoDB und die Einkaufslisten-Web-App mit dem Befehl
 \verb|docker compose up -d| gestartet werden.
@@ -50,46 +50,18 @@ Beim ersten Aufruf des n8n-Servers wird die Erstellung eines Benutzerkontos abge
 erfolgreichem Abschluss der Registrierung erfolgt die Weiterleitung zur Übersichtsseite, die in
 \autoref{fig:n8n_overview} dargestellt ist.
 
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.95\textwidth]{images/n8n_overview.png}
-    \end{center}
-    \caption{n8n Übersichtsseite}\label{fig:n8n_overview}
-\end{figure}
-
 In n8n selber müssen zunächst im \enquote{Credentials} Reiter zwei Zugangsdaten angelegt werden. Für
 die MongoDB müssen in den Feldern \enquote{Database}, \enquote{User} und \enquote{Password} die Daten
 eingetragen werden, die in der \verb|.env| Datei als \verb|MONGO_APP_DB|, \verb|MONGO_APP_USER| und
-\verb|MONGO_APP_PASS| festgelegt wurden.
-
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.95\textwidth]{images/n8n_mongo_creds.png}
-    \end{center}
-    \caption{n8n MongoDB Zugangsdaten}\label{fig:n8n_mongo_creds}
-\end{figure}
+\verb|MONGO_APP_PASS| festgelegt wurden (siehe \autoref{fig:n8n_mongo_creds}).
 
 Für die KI muss noch ein API Schlüssel von einem OpenAI Benutzerkonto hinterlegt werden. Dazu wird
-das zweite Zugangsdatum erstellt.
-
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.95\textwidth]{images/n8n_openai_creds.png}
-    \end{center}
-    \caption{n8n OpenAI Zugangsdaten}\label{fig:n8n_openai_creds}
-\end{figure}
+das zweite Zugangsdatum erstellt (siehe \autoref{fig:n8n_openai_creds}).
 
 Nachdem die beiden Zugangsdaten angelegt wurden, kann ein neuer Workflow erstellt werden. Im
 Bearbeitungsmodus angekommen, befindet sich oben rechts im Dreipunktemenü die Auswahl ein
 vorhandenen Workflow von einer Datei zu importieren. Im ZIP-Archiv ist der Workflow unter dem Namen
-\verb|Promillo.json| zu finden.
-
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.95\textwidth]{images/n8n_import.png}
-    \end{center}
-    \caption{n8n Import Workflow}\label{fig:n8n_import}
-\end{figure}
+\verb|Promillo.json| zu finden (siehe \autoref{fig:n8n_import}).
 
 Die Nodes, die Zugangsdaten benötigen werden rot makiert, diese müssen mit Doppelklick einmal
 geöffnet und in der oberen linken Ecke geschlossen werden. Die Zugangsdaten verwenden zwar den

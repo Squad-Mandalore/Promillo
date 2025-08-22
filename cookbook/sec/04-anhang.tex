@@ -1,5 +1,6 @@
-\begin{listing}
-\begin{minted}[xleftmargin=20pt,linenos,breaklines]{js}
+\section{Anhang}\label{sec:anhang} % (fold)
+\begin{listing}[htbp]
+\begin{minted}[xleftmargin=20pt,linenos,breaklines,fontsize=\scriptsize]{js}
 const rawData = $json["content"];
 const lines = rawData.split('\n');
 const formFields = [];
@@ -38,8 +39,8 @@ return formFields.map(field => ({ json: field }));
 \label{lst:descr:js:code1}
 \end{listing}
 
-\begin{listing}
-\begin{minted}[xleftmargin=20pt,linenos,breaklines]{js}
+\begin{listing}[htbp]
+\begin{minted}[xleftmargin=20pt,linenos,breaklines,fontsize=\scriptsize]{js}
 // Loop over input items and add a new field called 'myNewField' to the JSON of each one
 let out = { preferenzen: $('Edit Fields').first().json.preferenzen, personen: $('Edit Fields').first().json.personen, products: [] }
 for (const item of $input.all()) {
@@ -62,8 +63,8 @@ return out;
 \label{lst:descr:js:code2}
 \end{listing}
 
-\begin{listing}
-\begin{minted}[xleftmargin=20pt,linenos,breaklines]{json}
+\begin{listing}[htbp]
+\begin{minted}[xleftmargin=20pt,linenos,breaklines,fontsize=\scriptsize]{json}
 {
   "type": "object",
   "properties": {
@@ -118,8 +119,8 @@ return out;
 \label{lst:descr:js:code3}
 \end{listing}
 
-\begin{listing}
-\begin{minted}[xleftmargin=20pt,linenos,breaklines]{js}
+\begin{listing}[htbp]
+\begin{minted}[xleftmargin=20pt,linenos,breaklines,fontsize=\scriptsize]{js}
 const BASE = $env["SHOPPING_URL"] ?? "http://localhost:3069";
 
 const cocktails = $input.all().map(all => all.json);
@@ -161,8 +162,8 @@ return { html: htmlEntries.join('\n') };
 \label{lst:descr:js:code4}
 \end{listing}
 
-\begin{listing}
-\begin{minted}[xleftmargin=20pt,linenos,breaklines]{css}
+\begin{listing}[htbp]
+\begin{minted}[xleftmargin=20pt,linenos,breaklines,fontsize=\scriptsize]{css}
 body {
   font-family: 'Open Sans', sans-serif;
   background-color: #f0f0f0;
@@ -188,3 +189,31 @@ div h4 {
 \caption{CSS Code um dem Auge beim Erblicken des Ergebnisses zu schmeicheln}
 \label{lst:descr:js:code5}
 \end{listing}
+\clearpage
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{images/n8n_overview.png}
+    \end{center}
+    \caption{n8n Übersichtsseite}\label{fig:n8n_overview}
+\end{figure}
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{images/n8n_mongo_creds.png}
+    \end{center}
+    \caption{n8n MongoDB Zugangsdaten}\label{fig:n8n_mongo_creds}
+\end{figure}
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{images/n8n_openai_creds.png}
+    \end{center}
+    \caption{n8n OpenAI Zugangsdaten}\label{fig:n8n_openai_creds}
+\end{figure}
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{images/n8n_import.png}
+    \end{center}
+    \caption{n8n Import Workflow}\label{fig:n8n_import}
+\end{figure}

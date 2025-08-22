@@ -1,10 +1,4 @@
 \section{Technische Beschreibung}\label{sec:descr} % (fold)
-
-\subsection{Blackbox-Sicht}\label{sec:descr:blackbox}
-[Ich warte auf Ole, damit wir nicht Sachen doppelt schreiben]
-
-\subsection{Komponenten}\label{sec:descr:components}
-
 Der Workflow ist aus mehreren gedanklichen Komponenten zusammengesetzt, welche wiederum aus kleineren Teilen bestehen. \\
 
 \textbf{Nutzerinformationen} \\
@@ -28,9 +22,13 @@ welches wir mit dem Workflow verbunden haben. \\
 
 Der genutzte Prompt sieht wie folgt aus:
 \begin{verbatim}
-Erkenne auf jedem Bild genau eine Flasche (die im Fokus bzw. im Vordergrund steht) und gib folgende Angaben im exakt angegebenen Format aus:
+Erkenne auf jedem Bild genau eine Flasche
+(die im Fokus bzw. im Vordergrund steht) und gib folgende
+Angaben im exakt angegebenen Format aus:
 
-{Genaue Bezeichnung des Getränks,z. B. “Coca-Cola Zero Sugar”,“Gerolsteiner Mineralwasser Medium”,“Volvic Mango”},{Maximalvolumen in ml},{Füllstand in %}
+{Genaue Bezeichnung des Getränks,
+z. B. “Coca-Cola Zero Sugar”,“Gerolsteiner Mineralwasser
+Medium”,“Volvic Mango”},{Maximalvolumen in ml},{Füllstand in %}
 \end{verbatim}
 
 Die Ausgabe des Modells erfolgt im JSON-Format, für die weitere Nutzung der Daten im Workflow. \\
@@ -54,30 +52,42 @@ dafür genutzt wird. \\
 Die validierten Daten, welche aus der vorherigen Komponente stammen, werden nun an ein weiteres
 KI-Modell gegeben. Genutzt wird folgender System Prompt: \\
 \begin{verbatim}
-Du bist MixMaster AI, ein hochqualifizierter virtueller Barkeeper und Cocktailexperte. Deine Aufgabe ist es, auf Basis der vom Nutzer angegebenen Präferenzen, der vorhandenen Zutaten und der gewünschten Anzahl an Personen passende Cocktailrezepte vorzuschlagen. Nutze dazu die Ressource „CocktailDB“ – eine Datenbank mit bekannten Cocktailrezepten als Tool. Beachte dabei:
+Du bist MixMaster AI, ein hochqualifizierter virtueller Barkeeper
+und Cocktailexperte. Deine Aufgabe ist es, auf Basis der vom Nutzer
+angegebenen Präferenzen, der vorhandenen Zutaten und der gewünschten
+Anzahl an Personen passende Cocktailrezepte vorzuschlagen. Nutze
+dazu die Ressource „CocktailDB“ - eine Datenbank mit bekannten
+Cocktailrezepten als Tool. Beachte dabei:
 
 1. **Eingaben**
    - Präferenzen (z. B. Geschmack: süß, sauer, herb etc.)
-   - Verfügbare Produkte (Liste von Spirituosen, Likören, Sirups, Säften, Bitters, Früchten, etc.)
+   - Verfügbare Produkte (Liste von Spirituosen, Likören,
+        Sirups, Säften, Bitters, Früchten, etc.)
    - Anzahl Personen, für die gemixt werden soll
+
 
 2. **Verarbeitung**
    - Greife auf CocktailDB zu, um passende Rezepte zu finden.
-   - Nutze nicht zwingend alle verfügbaren Zutaten – wähle die besten Kombinationen passend zu den Präferenzen.
-   - Falls ein Rezept eine oder mehrere Zutaten enthält, die der Nutzer nicht vorrätig hat, führe diese als „fehlende Zutaten“ gesondert auf.
+   - Nutze nicht zwingend alle verfügbaren Zutaten - wähle die besten
+        Kombinationen passend zu den Präferenzen.
+   - Falls ein Rezept eine oder mehrere Zutaten enthält, die der Nutzer
+        nicht vorrätig hat, führe diese als
+        „fehlende Zutaten“ gesondert auf.
 
 Verhalte dich stets professionell, freundlich und präzise.
 \end{verbatim}
 
-und folgender User Prompt:
+Und folgender User Prompt:
 \begin{verbatim}
-Erstelle 5 kreative aber auch gängige Cocktail-Vorschläge auf Basis der folgenden Angaben:
+Erstelle 5 kreative aber auch gängige Cocktail-Vorschläge auf
+Basis der folgenden Angaben:
 
 **Präferenzen**: {{ $('Edit Fields').item.json.preferenzen }}
 **Anzahl Personen**: {{ $('Edit Fields').item.json.personen }}
 **Verfügbare Produkte**: {{ $json.products }}
 
-Die Inhalte von Verfügbare Produkte sind {Produkt},{Maximales Volumen in Milliliter},{Aktueller Inhalt in Prozent}
+Die Inhalte von Verfügbare Produkte sind
+{Produkt},{Maximales Volumen in Milliliter},{Aktueller Inhalt in Prozent}
 \end{verbatim}
 
 Als Modell wird erneut \textbf{GPT-4O-MINI} genutzt.
